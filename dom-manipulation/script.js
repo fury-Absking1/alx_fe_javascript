@@ -6,7 +6,7 @@ const newQuoteCategory = document.getElementById('newQuoteCategory');
 
 const quotes = [
     { text: 'The only way to do great work is to love what you do.', author: 'Steve Jobs' },
-    { text: 'Innovation distinguishes between a leader and a follower.', author: 'Steve Jobs'   
+    { text: 'Innovation distinguishes between a leader and a follower.', author: 'Steve Jobs'  
  },
     // ... more quotes
 ];
@@ -14,7 +14,7 @@ const quotes = [
 function showRandomQuote() {
     const randomIndex = Math.floor(Math.random() * quotes.length);
     const randomQuote = quotes[randomIndex];
-    quoteDisplay.innerHTML = `"${randomQuote.text}"   
+    quoteDisplay.innerHTML = `"${randomQuote.text}"
  - ${randomQuote.author}`;
 }
 
@@ -29,4 +29,4 @@ function addQuote() {
     showRandomQuote(); // Display the newly added quote
 }
 
-newQuoteButton.addEventListener('click', showRandomQuote);
+newQuoteButton.addEventListener('click', showRandomQuote);ddt
