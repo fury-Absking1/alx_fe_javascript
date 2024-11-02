@@ -5,7 +5,7 @@ const newQuoteCategory = document.getElementById('newQuoteCategory');
 const importFile = document.getElementById('importFile');
 
 const STORAGE_KEY = 'quotes';
-const SERVER_URL = 'https://your-server-endpoint'; // Replace with your actual server URL
+const SERVER_URL = 'https://jsonplaceholder.typicode.com/posts';
 
 let quotes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
@@ -30,10 +30,24 @@ function addQuote() {
     showRandomQuote();
 }
 
-function saveQuotes() {
+async function saveQuotes() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(quotes));
-    // Send the updated quotes to the server
-    fetchQuotesFromServer();
+
+    // Send the updated quotes to the server (optional)
+    try {
+        const response = await fetch(SERVER_URL, {
+            method: 'POST',
+            body: JSON.stringify(quotes)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`);
+        }
+
+        console.log('Quotes saved to server successfully');
+    } catch (error) {
+        console.error('Error saving quotes to server:', error);
+    }
 }
 
 function exportQuotesToJson() {
@@ -60,27 +74,31 @@ function importFromJsonFile(event) {
     fileReader.readAsText(event.target.files[0]);
 }
 
-function fetchQuotesFromServer() {
-    fetch(SERVER_URL)
-        .then(response => response.json())
-        .then(serverQuotes => {
-            // Merge server quotes with local quotes, prioritizing server data
-            const mergedQuotes = serverQuotes.map(serverQuote => {
-                const localQuote = quotes.find(quote => quote.id === serverQuote.id);
-                return localQuote ? { ...localQuote, ...serverQuote } : serverQuote;
-            });
+async function fetchQuotesFromServer() {
+    try {
+        const response = await fetch(SERVER_URL);
+        if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`);
+        }
 
-            quotes = mergedQuotes;
-            saveQuotes();
-            showRandomQuote();
-        })
-        .catch(error => {
-            console.error('Error fetching data from server:', error);
+        const serverQuotes = await response.json();
+
+        // Merge server quotes with local quotes, prioritizing server data
+        const mergedQuotes = serverQuotes.map(serverQuote => {
+            const localQuote = quotes.find(quote => quote.id === serverQuote.id);
+            return localQuote ? { ...localQuote, ...serverQuote } : serverQuote;
         });
+
+        quotes = mergedQuotes;
+        saveQuotes();
+        showRandomQuote();
+    } catch (error) {
+        console.error('Error fetching data from server:', error);
+    }
 }
 
 // Periodically sync with the server (adjust interval as needed)
-setInterval(syncWithServer, 5000);
+setInterval(fetchQuotesFromServer, 5000);
 
 // Initial setup
 populateCategories();
