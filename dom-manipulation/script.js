@@ -41,3 +41,4 @@ function addQuote() {
     // Directly display the newly added quote
     quoteDisplay.textContent = `"${newQuote.text}" - ${newQuote.category}`;
   }
+  newQuoteButton.addEventListener('click', showRandomQuote);
