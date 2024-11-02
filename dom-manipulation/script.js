@@ -2,17 +2,23 @@ const quoteDisplay = document.getElementById('quoteDisplay');
 const newQuoteButton = document.getElementById('newQuote');
 const newQuoteText = document.getElementById('newQuoteText');
 const newQuoteCategory = document.getElementById('newQuoteCategory');
-const importFile = document.getElementById('importFile');
+const categoryFilter = document.getElementById('categoryFilter');
 
-const STORAGE_KEY = 'quotes'; // Key for local storage
+const STORAGE_KEY = 'quotes';
 
-const quotes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; // Load from local storage or initialize empty array
+let quotes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+let lastSelectedCategory = localStorage.getItem('lastCategory') || 'all';
 
-function showRandomQuote() {
-  const randomIndex = Math.floor(Math.random() * quotes.length);
-  const randomQuote = quotes[randomIndex];
-  quoteDisplay.textContent = `"${randomQuote.text}"   
- - ${randomQuote.author}`;
+function showRandomQuote(categoryFilter) {
+  const filteredQuotes = quotes.filter(quote => categoryFilter === 'all' || quote.category === categoryFilter);
+  if (filteredQuotes.length > 0) {
+    const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
+    const randomQuote = filteredQuotes[randomIndex];   
+
+    quoteDisplay.textContent = `"${randomQuote.text}" - ${randomQuote.author}`;
+  } else {
+    quoteDisplay.textContent = "No quotes found for this category.";
+  }
 }
 
 function addQuote() {
@@ -25,63 +31,49 @@ function addQuote() {
   newQuoteText.value = '';
   newQuoteCategory.value = '';
 
-  // Directly display the newly added quote
-  quoteDisplay.textContent = `"${newQuote.text}" - ${newQuote.category}`;
+  // Update the category filter options
+  populateCategories();
 
-  saveQuotes(); // Save quotes to local storage
+  saveQuotes();
+  showRandomQuote(lastSelectedCategory);
 }
 
 function saveQuotes() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(quotes));
+  localStorage.setItem('lastCategory', lastSelectedCategory);
 }
 
-function exportQuotesToJson() {
-  const jsonString = JSON.stringify(quotes);
-  const blob = new Blob([jsonString], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download   
- = 'quotes.json';
-  link.click();
+function populateCategories() {
+  const uniqueCategories = [...new Set(quotes.map(quote => quote.category))];
+  uniqueCategories.unshift('all');
 
-  URL.revokeObjectURL(url); // Clean up temporary URL
+  categoryFilter.innerHTML = '';
+  uniqueCategories.forEach(category => {
+    const option = document.createElement('option');
+    option.value = category;
+    option.text   
+ = category;
+    categoryFilter.appendChild(option);   
+
+  });
+
+  categoryFilter.value = lastSelectedCategory;
 }
 
-function importFromJsonFile(event) {
-  const fileReader = new FileReader();
-  fileReader.onload = function(event) {
-    const importedQuotes = JSON.parse(event.target.result);
-    quotes.push(...importedQuotes);
-    saveQuotes();
-    alert('Quotes imported successfully!');
-  };
-  fileReader.readAsText(event.target.files[0]);
+function filterQuotes() {
+  const selectedCategory = categoryFilter.value;
+  lastSelectedCategory = selectedCategory;
+  showRandomQuote(selectedCategory);
 }
 
-// Optional Session Storage Example (store last viewed quote)
-const sessionLastViewedQuote = sessionStorage.getItem('lastViewedQuote');
-if (sessionLastViewedQuote) {
-  quoteDisplay.textContent = sessionLastViewedQuote;
-}
+// Initial setup
+populateCategories();
+showRandomQuote(lastSelectedCategory);
 
-// Attach Event Listeners
 newQuoteButton.addEventListener('click', showRandomQuote);
-newQuoteText.addEventListener('keyup', function(event) { // Add quote on Enter key press
+newQuoteText.addEventListener('keyup', function(event) {
   if (event.key === 'Enter') {
     addQuote();
   }
 });
-importFile.addEventListener('change', importFromJsonFile);
-
-// Save quotes on page unload (optional)
-window.addEventListener('beforeunload', function(event) {
-  saveQuotes();
-});
-
-// Update session storage with last viewed quote on every quote change
-quoteDisplay.addEventListener('DOMSubtreeModified', function() {
-  sessionStorage.setItem('lastViewedQuote', quoteDisplay.textContent);
-});
-
-showRandomQuote(); // Display a random quote on page load
+categoryFilter.addEventListener('change', filterQuotes);
