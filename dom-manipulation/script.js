@@ -27,3 +27,17 @@ function addQuote() {
     newQuoteCategory.value = '';
     showRandomQuote(); // Display the newly added quote
 }
+
+function addQuote() {
+    const newQuote = {
+      text: newQuoteText.value,
+      category: newQuoteCategory.value
+    };
+  
+    quotes.push(newQuote);
+    newQuoteText.value = '';
+    newQuoteCategory.value = '';
+  
+    // Directly display the newly added quote
+    quoteDisplay.textContent = `"${newQuote.text}" - ${newQuote.category}`;
+  }
